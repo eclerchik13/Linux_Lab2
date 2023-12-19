@@ -1,0 +1,95 @@
+- name: Security
+  hosts: ubuntu2004
+  become: true
+  tasks:
+
+    #- name: 0.Copy scripts
+    #  copy:
+    #    src: bash1_etc.sh
+    #    dest: /etc/bash1_etc.sh
+    #    mode: u=rwx
+      # check p.1,2,4
+
+    - name: 1.Check /etc/shadow
+      shell: stat -c %a /etc/shadow | grep "640"
+      register: res_etc_shadow
+
+    - name: Save info /etc/shadow
+      copy:
+        content: |
+          {% if res_etc_shadow.stdout != "" %}
+            "File /etc/shadow has ivalid perm"
+          {% endif %}
+        dest: /home/perm_EtcShadow.txt
+
+    - name: 2. Find suid files
+      shell: find / -type f -executable -perm -u=s 2>/dev/null
+      register: suid_files
+      ignore_errors: yes
+
+    - name: Save suid files
+      copy:
+        content: |
+          {% for file in suid_files.stdout_lines %}
+            "This file with suid bit: {{file}}"
+          {% endfor %}
+        dest: /home/suid_Files.txt
+
+    - name: 3. Find PwnKit
+      shell: apt-cache policy policykit-1 | grep "18.04.5"
+      register: pwnkit_ver
+      ignore_errors: yes
+
+    - name: Find CVE-2022-0847
+      shell: uname -rs | grep -E '5\.8\.|5\.9|5\.1[0-5]'
+      register: cve_0847
+      ignore_errors: yes
+
+    - name: Find CVE-2016-5195
+      shell: uname -rs | grep -E '2\.6\.3[89]|4\.[0-9]|4\.1[0-4]'
+      register: cve_5195
+      ignore_errors: yes
+
+    - name: Save cve's files
+      copy:
+        content: |
+          {% if pwnkit_ver.stdout != ""%}
+            "Pwnkit is in this host"
+          {% endif %}
+          {% if cve_0847.stdout != "" %}
+            "CVE-2022-0847 is on this host"
+          {% endif %}
+          {% if cve_5195.stdout != "" %}
+            "CVE-2016-5195 is on this host"
+          {% endif %}
+        dest: /home/CVE.txt
+
+    - name: 4. Sshd config
+      shell: cat /etc/ssh/sshd_config | grep -E 'PermitRootLogin yes|PermitEmptyPasswords yes'
+      register: sshd
+
+    - name: Save sshd config setting
+      copy:
+        content: |
+          {% if sshd.stdout != '' %}
+            "This host has unsafe settings"
+          {% endif %}
+        dest: /home/sshd_Settings.txt
+
+    #- name: Get files from /root/.ssh/*
+    #  shell:
+    #    cmd: sudo ls /home #/root/.ssh
+    #  register: files
+    #  ignore_errors: yes
+
+    #- name: Check /root/.ssh
+    #  copy:
+    #    content: |
+    #      {% if files.stdout != ''%}
+    #        {% for file in files.stdout_lines %}
+    #          sudo stat -c %a {{file}}
+    #        {% endfor %}
+    #      {% else %}
+    #        "No such file .. /root/.ssh"
+    #     {% endif %}
+    #    dest: /home/perm_RootShadow.txt
