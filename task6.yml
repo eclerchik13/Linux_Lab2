@@ -1,0 +1,13 @@
+- name: Security
+  hosts: ubuntu2004
+  become: true
+  tasks:
+
+    - name: 0.Copy scripts
+      copy:
+        src: bash1_etc.sh
+        dest: /etc/bash1_etc.sh
+        mode: u=rwx
+      # check p.1,2,4
+    - name: 1.2.4.Check valid perm, suid, sshd_config
+      shell: /etc/bash1_etc.sh

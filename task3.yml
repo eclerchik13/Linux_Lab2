@@ -1,0 +1,46 @@
+- name: Install MySQL and settings
+  hosts: ubuntu2004
+  become: true
+  tasks:
+    - name: Install MySQL
+      apt:
+        name: mysql-server
+        state: present
+
+    - name: Start MySQL service
+      service:
+        name: mysql
+        state: started
+        enabled: true
+
+    - name: Install modules
+      apt:
+        name: python3-pip
+        state: present
+
+    - name: Install pymysql
+      pip:
+        name: pymysql
+        state: present
+
+    - name: create user
+      community.mysql.mysql_user:
+        name: 'user2'
+        password: '12345'
+        priv: '*.*:ALL'
+        state: present
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+
+    - name: Create config file cnf
+      copy:
+        dest: /root/.my.cnf
+        mode: '0600'
+        content: |
+          [client]
+          user='user2'
+          password='12345'
+
+    - name: Create DB
+      community.mysql.mysql_db:
+        name: 'mysqlbd'
+        state: present

@@ -1,0 +1,19 @@
+- hosts: ubuntu2004
+  name: Create user and add to sudoers
+  become: true
+  vars:
+    username: 'user2'
+    passw: 'ops1310valeria'
+  tasks:
+    - name: Create user
+      user:
+        name: "{{username}}"
+        password: "{{passw | password_hash('sha512') }}"
+
+
+    - name: Add to sudoers
+      lineinfile:
+        path: /etc/sudoers
+        line: "{{ username }} ALL=(ALL) NOPASSWD:ALL"
+        validate: "visudo -cf %s"
+

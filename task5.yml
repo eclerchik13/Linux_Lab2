@@ -1,0 +1,11 @@
+---
+- name: Schedule a cronjob
+  hosts: ubuntu2004
+  become: true
+  tasks:
+    - name: Job
+      ansible.builtin.cron:
+        name: "calendar"
+        job: "cal"
+        minute: "5"
+        hour: "2"

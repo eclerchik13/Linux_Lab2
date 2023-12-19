@@ -1,0 +1,20 @@
+- name: Install nginx and settings
+  hosts: ubuntu2004
+  become: true
+  tasks:
+    - name: install nginx
+      apt:
+        name: nginx
+        state: latest
+
+    - name: settings nginx
+      template:
+        src: nginx.conf
+        dest: /etc/nginx/nginx.conf
+
+    - name: start nginx
+      service:
+        name: nginx
+        state: started
+        enabled: true
+

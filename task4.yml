@@ -1,0 +1,43 @@
+---
+- name: deploy httpd on container
+  hosts: ubuntu2004
+  become: true
+  tasks:
+    - name: system packages present
+      ansible.builtin.apt:
+        name:
+          - python3-pip
+          - virtualenv
+          - python3-setuptools
+        state: latest
+        update_cache: true
+
+    - name: install docker
+      ansible.builtin.apt:
+        name: docker.io
+        state: present
+
+    - name: Docker Module for Python
+      ansible.builtin.pip:
+        name: docker
+        state: present
+
+    - name: start docker
+      service:
+        name: docker
+        state: started
+
+    - name: pull image
+      community.docker.docker_image:
+        name: httpd:latest
+        source: pull
+
+    - name: run httpd container
+      community.docker.docker_container:
+        name: webserver
+        image: httpd:latest
+        state: started
+        detach: true
+
+        ports:
+          - 8080:80
